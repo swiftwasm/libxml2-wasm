@@ -1,0 +1,38 @@
+name: Build
+
+on:
+  create:
+    tags:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build:
+    name: Native Build
+    runs-on: ubuntu-latest
+    env:
+      WASI_SDK_MAJOR_VERSION: 12
+      WASI_SDK_MINOR_VERSION: 0
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Install ninja
+        run: sudo apt install ninja-build
+      - name: Install wasi-sdk
+        run: |
+          WASI_SDK_VERSION=$WASI_SDK_MAJOR_VERSION.$WASI_SDK_MINOR_VERSION
+          wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-$WASI_SDK_MAJOR_VERSION/wasi-sdk-$WASI_SDK_VERSION-linux.tar.gz
+          tar xvf wasi-sdk-$WASI_SDK_VERSION-linux.tar.gz
+          ln -s wasi-sdk-$WASI_SDK_VERSION wasi-sdk
+      - name: Build
+        run: |
+          export WASI_SDK_PREFIX="$GITHUB_WORKSPACE/wasi-sdk"
+          make package
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v1
+        with:
+          name: libxml2-wasm32-unknown-wasi.tar.gz
+          path: build/libxml2-wasm32-unknown-wasi.tar.gz
