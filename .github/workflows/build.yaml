@@ -1,11 +1,9 @@
 name: Build
 
 on:
-  create:
-    tags:
   push:
-    branches:
-      - main
+    branches: [main]
+    tags: ['*']
   pull_request:
 
 jobs:
@@ -43,5 +41,7 @@ jobs:
           path: build/libxml2-wasm32-unknown-wasip1-threads.tar.gz
       - name: Release
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create ${{ github.ref }} build/libxml2-wasm32-unknown-wasi.tar.gz build/libxml2-wasm32-unknown-wasip1-threads.tar.gz
