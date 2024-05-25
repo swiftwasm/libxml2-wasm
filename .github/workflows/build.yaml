@@ -13,10 +13,10 @@ jobs:
     name: Native Build
     runs-on: ubuntu-latest
     env:
-      WASI_SDK_MAJOR_VERSION: 12
+      WASI_SDK_MAJOR_VERSION: 21
       WASI_SDK_MINOR_VERSION: 0
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: true
       - name: Install ninja
@@ -31,8 +31,17 @@ jobs:
         run: |
           export WASI_SDK_PREFIX="$GITHUB_WORKSPACE/wasi-sdk"
           make package
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v1
+      - name: Upload artifacts (wasm32-unknown-wasi)
+        uses: actions/upload-artifact@v4
         with:
           name: libxml2-wasm32-unknown-wasi.tar.gz
           path: build/libxml2-wasm32-unknown-wasi.tar.gz
+      - name: Upload artifacts (wasm32-unknown-wasip1-threads)
+        uses: actions/upload-artifact@v4
+        with:
+          name: libxml2-wasm32-unknown-wasip1-threads.tar.gz
+          path: build/libxml2-wasm32-unknown-wasip1-threads.tar.gz
+      - name: Release
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        run: |
+          gh release create ${{ github.ref }} build/libxml2-wasm32-unknown-wasi.tar.gz build/libxml2-wasm32-unknown-wasip1-threads.tar.gz
